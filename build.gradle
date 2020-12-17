@@ -1,0 +1,107 @@
+plugins {
+    id 'io.spring.dependency-management' version "${springDependenciesManagement}"
+    id 'java'
+    id 'maven'
+    id 'application'
+}
+
+group = "${projectGroupId}"
+version = "${projectVersion}"
+sourceCompatibility = "${javaCompileVersion}"
+
+repositories {
+    // 定义仓库位置
+    mavenLocal()
+    maven { url "${aliyun_nexusUrl}" }  //Maven 仓库
+    maven { url "https://repo.spring.io/libs-release" }
+    jcenter() //JFrog公司提供的性能更好的maven仓库
+    mavenCentral() // 中央库
+}
+
+dependencyManagement {
+    imports {
+        //springboot版本策略
+        mavenBom "org.springframework.boot:spring-boot-starter-parent:${springbootVersion}"
+    }
+}
+
+//构建java项目默认目录
+task createJavaProject {
+    sourceSets*.java.srcDirs*.each { if (!it.exists()) it.mkdirs() }
+    sourceSets*.resources.srcDirs*.each { if (!it.exists()) it.mkdirs() }
+    if (!getBuildFile().exists()) {
+        getBuildFile().createNewFile()
+        getBuildFile().setText(defaultText1)
+    }
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter'
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    }
+    compile 'org.springframework.boot:spring-boot-starter-amqp'
+    compile "cglib:cglib:${cglibVersion}"
+    compile "com.alibaba:fastjson:${fastjsonVersion}"
+}
+//添加构建消息
+jar {
+    manifest {
+        attributes(
+                "Manifest-Version": "1.0",
+                "Implementation-Title": project.name,
+                "Implementation-Version": project.version,
+                "Specification-Vendor": "gaad.com",
+                "Specification-Title": project.name,
+                "Implementation-Vendor": "gaad.com",
+                "Specification-Version": project.version,
+                "Implementation-Vendor-Id": project.group,
+                "Created-By": "Gradle ${gradle.gradleVersion}",
+                "Build-Jdk": "JDK " + System.getProperty("java.version")
+        )
+    }
+}
+
+
+//配置group信息
+group = "${projectGroupId}"
+//配置version信息
+version = "${projectVersion}"
+//配置注释信息
+description = "${projectDescription}"
+task sourceJar (type:Jar) {
+    archiveClassifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives sourceJar
+}
+
+//通过gradle install，安装到.m2本地仓库
+install {
+    dependsOn build
+    repositories.mavenInstaller {
+        pom.version = "$project.version"
+        pom.artifactId = "$project.name"
+        pom.groupId = "$project.group"
+    }
+}
+
+//上传到公司搭建的maven私服 nexus
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            //上传至本地库
+            //println("上传[$project.name]至本地库: " + mavenLocal().url)
+            //repository(url: mavenLocal().url)
+            //上传至maven私服
+            repository(url: "${nexusSnapshotUrl}") {
+                authentication(userName: "admin", password: "123456")
+            }
+            pom.version = "$project.version"
+            pom.artifactId = "$project.name"
+            pom.groupId = "$project.group"
+        }
+    }
+}
