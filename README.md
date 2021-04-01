@@ -2,7 +2,7 @@
 > fgb mains front ground bridge, using this you can rpc anything with out limited auth things like **oauth2**
 
 #### @FgbClient
-```
+```java
 package com.gaad.fgb.demo.demo.fgb;
 
 import com.gaad.rabbitmq.fgb.annotation.FgbClient;
@@ -24,7 +24,7 @@ public interface IndexFgbClient {
 
 ``` 
 #### @FgbServer
-```
+```java
 package com.gaad.fgb.demo.demo.fgb;
 
 import com.gaad.rabbitmq.fgb.annotation.FgbServer;
@@ -54,7 +54,7 @@ public class IndexFgbServer {
 
 ```
 ####  Controller( in controller you can @Autowired the interface of @FgbClient )
-```
+```java
 package com.gaad.fgb.demo.demo.controller;
 
 import com.gaad.fgb.demo.demo.fgb.IndexFgbClient;
